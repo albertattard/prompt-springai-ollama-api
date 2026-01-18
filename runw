@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Get the IP address of the OCI instance where the code will be synced and
+# command executed
+IP_ADDRESS=$(terraform -chdir='../../infrastructure/oci/terraform' output -json | jq --raw-output '.instance_public_ip.value')
+
+# The place where the code is placed
+WORKSPACE='/home/opc/workspace'
+
+# The current project/directory
+PROJECT="${PWD##*/}"
+
+# Sync the files from this directory before executing any commands.
+rsync \
+  --rsh 'ssh -i ~/.ssh/oracle_id_ed25519' \
+  --recursive \
+  --verbose \
+  --update \
+  --delete \
+  --exclude-from='../.rsync-exclude' \
+  . \
+  "opc@${IP_ADDRESS}:${WORKSPACE}/${PROJECT}"
+
+# Switch to Java 25
+SWITCH_JAVA='sdk use java 25-oracle'
+
+# The remote directory from where the commands are executed
+WORKDIR="${WORKSPACE}/${PROJECT}"
+
+# Build the command
+COMMAND=("${SWITCH_JAVA};cd ${WORKDIR};$@")
+
+# Execute the given command(s)
+ssh -i ~/.ssh/oracle_id_ed25519 "opc@${IP_ADDRESS}" "${COMMAND[@]}"

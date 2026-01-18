@@ -1,0 +1,326 @@
+{
+  "entries": [
+    {
+      "type": "Heading",
+      "level": "H1",
+      "title": "Prompt - Spring AI and Ollama API"
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "This example demonstrates how to prompt a locally hosted large language model",
+        "(LLM) using [Ollama](https://ollama.com/). Ollama is an open-source platform and",
+        "command-line tool that enables developers to download, manage, and run LLMs",
+        "entirely on their own machines. This removes the need for cloud APIs, access",
+        "keys, and many privacy concerns. It supports multimodal inputs, tool calling,",
+        "and integration via REST and",
+        "[Java](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html),",
+        "making it well suited to prototyping, debugging, and deploying LLM-powered",
+        "applications in a fully offline and customisable environment.",
+        "",
+        "This example uses [Spring AI](https://spring.io/projects/spring-ai), a",
+        "Java-based framework for building applications powered by LLMs. It provides",
+        "support for prompt management, chaining LLM calls, memory handling,",
+        "retrieval-augmented generation (RAG), and integration with external data",
+        "sources, all within the Java ecosystem.",
+        "",
+        "[LangChain4J](https://github.com/langchain4j/langchain4j) is an alternative",
+        "framework that also offers an abstraction layer between LLMs and the",
+        "application."
+      ]
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "---"
+      ]
+    },
+    {
+      "type": "Heading",
+      "level": "H2",
+      "title": "Disclaimer"
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "The examples provided in this repository are for **educational purposes only**.",
+        "While every effort has been made to ensure accuracy and reliability, these",
+        "examples are provided **“as is”**, without any warranties, express or implied.",
+        "",
+        "By using these examples, you acknowledge that you do so **at your own risk**.",
+        "The authors and contributors shall **not be held liable** for any direct,",
+        "indirect, incidental, or consequential damages resulting from the use, misuse,",
+        "or inability to use these examples.",
+        "",
+        "It is the responsibility of the user to **review, test, and validate** any code",
+        "before applying it in a production or commercial environment."
+      ]
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "---"
+      ]
+    },
+    {
+      "type": "Heading",
+      "level": "H2",
+      "title": "Prerequisites"
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "- [Oracle Java 25](https://www.oracle.com/java/technologies/downloads/#java25)",
+        "- [Ollama](https://ollama.com/download)",
+        "- [curl](https://curl.se/)",
+        "- [jq](https://jqlang.org/)"
+      ]
+    },
+    {
+      "type": "Heading",
+      "level": "H2",
+      "title": "Run the example"
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "1. Download and setup Ollama",
+        "",
+        "   If you have not already done so, download and install Ollama from the",
+        "   [official download page](https://ollama.com/download), following the provided",
+        "   instructions. Ollama includes a command-line interface (CLI) for managing and",
+        "   interacting with models.",
+        "",
+        "   Models can be downloaded from repositories such as the",
+        "   [Ollama Library](https://ollama.com/library) or",
+        "   [Hugging Face](https://huggingface.co/models). Ensure the model is available",
+        "   in a supported format such as",
+        "   [GGUF (GPT-Generated Unified Format)](https://huggingface.co/docs/hub/en/gguf).",
+        "",
+        "   To list models installed locally, run:"
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "ollama list"
+      ],
+      "output": {
+        "caption": "After a fresh installation, no models will be listed."
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "   To get started, download [LLaMA 2](https://ollama.com/library/llama2) with:"
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "ollama pull llama2"
+      ],
+      "output": {
+        "caption": [
+          "This process may take a few seconds to several minutes, depending on your",
+          "internet connection."
+        ]
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "   Once the model is downloaded, you can begin using it.",
+        "",
+        "   (Optional) To confirm the model has been installed, list the models again:"
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "ollama list"
+      ],
+      "output": {
+        "caption": "You should now see `llama2` in the list."
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "   To interact with the model using the command-line interface, run:",
+        "",
+        "   ```shell",
+        "   ollama run llama2",
+        "   ```",
+        "",
+        "   This opens a prompt where you can engage with the model. If the model has not",
+        "   yet been downloaded, Ollama will download it automatically. You can interact",
+        "   with the model via the CLI",
+        "",
+        "   ```",
+        "   >>> When did humans first land on the Moon?",
+        "",
+        "   Humans first landed on the Moon on July 20, 1969, during the Apollo 11 mission. The spacecraft carrying the astronauts, Neil Armstrong and Edwin \"Buzz\" Aldrin, landed on the lunar surface in the Sea of Tranquility at 20:17 UTC (Coordinated Universal Time). Armstrong became the first person to set foot on the Moon, famously declaring \"That's one small step for man, one giant leap for mankind\" as he stepped out of the lunar module Eagle.",
+        "",
+        "   >>> /bye",
+        "   ```",
+        "",
+        "   Alternatively, you can interact with the model through a graphical interface,",
+        "   such as [Open WebUI](https://github.com/open-webui/open-webui), which offers",
+        "   a web-based experience similar to cloud-hosted models.",
+        "",
+        "   To verify that Ollama is running and accessible on the default port `11434`,",
+        "   use:"
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "curl --silent --show-error 'http://localhost:11434/api/tags' | jq"
+      ],
+      "output": {
+        "caption": "This will return a list of available models."
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "   When using Ollama via the REST API, as in the following steps, the required",
+        "   model must be downloaded in advance. Ollama does not automatically download",
+        "   missing models when accessed through the REST API; this functionality is only",
+        "   available via the CLI, for example with `ollama run llama2`. Please ensure",
+        "   the `llama2` model is available before proceeding.",
+        "",
+        "   Verify that the Ollama APIs can be successfully invoked."
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "curl http://localhost:11434/api/chat \\",
+        "  --silent \\",
+        "  --header \"Content-Type: application/json\" \\",
+        "  --data '{",
+        "  \"model\": \"llama2\",",
+        "  \"messages\": [",
+        "    {",
+        "      \"role\": \"user\",",
+        "      \"content\": \"When did humans first land on the Moon?\"",
+        "    }",
+        "  ],",
+        "  \"stream\": false,",
+        "  \"options\": {",
+        "    \"temperature\": 0.0",
+        "  }",
+        "}' | jq"
+      ],
+      "output": {
+        "caption": [
+          "The model response"
+        ],
+        "content_type": "json"
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "2. Build the application",
+        "",
+        "   This step assumes that Ollama is accessible on port `11434` and that the",
+        "   `llama2` model is available. For further details, please refer to Step 1."
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "./mvnw clean verify"
+      ],
+      "should_finish_within": "2 minutes",
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "   (_Optional_) Verify that the application was created."
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "tree --prune --sort=name -L 1 './target'"
+      ],
+      "output": {
+        "caption": "The application Fat JAR file"
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "3. Run the program",
+        "",
+        "   This step assumes that Ollama is accessible on port `11434` and that the",
+        "   `llama2` model is available. For further details, please refer to Step 1.",
+        "",
+        "   Run the example with the default prompt."
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "java \\",
+        "  -jar './target/prompt-springai-ollama-api-1.0.0.jar'"
+      ],
+      "output": {
+        "caption": [
+          "Although the prompt remains the same, the output may vary with each run."
+        ]
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "   Run the example again with specific prompt."
+      ]
+    },
+    {
+      "type": "Command",
+      "commands": [
+        "java \\",
+        "  -jar './target/prompt-springai-ollama-api-1.0.0.jar' \\",
+        "  'Who was the first person to walk on the Moon?'"
+      ],
+      "output": {
+        "caption": [
+          "The model should respond with 'Neil Armstrong', as he was the first person to",
+          "walk on the Moon."
+        ]
+      },
+      "indent": 3
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "---"
+      ]
+    },
+    {
+      "type": "Heading",
+      "level": "H2",
+      "title": "Feedback and Support"
+    },
+    {
+      "type": "Markdown",
+      "contents": [
+        "Should you require any assistance in using this workshop or have any feedback,",
+        "please reach out to Albert Attard (`albert.attard@oracle.com`)."
+      ]
+    }
+  ]
+}
