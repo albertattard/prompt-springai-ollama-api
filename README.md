@@ -174,8 +174,9 @@ before applying it in a production or commercial environment.
    Verify that the Ollama APIs can be successfully invoked.
 
    ```shell
-   curl http://localhost:11434/api/chat \
+   curl 'http://localhost:11434/api/chat' \
      --silent \
+     --show-error \
      --header "Content-Type: application/json" \
      --data '{
      "model": "llama2",

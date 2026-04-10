@@ -201,8 +201,9 @@
     {
       "type": "Command",
       "commands": [
-        "curl http://localhost:11434/api/chat \\",
+        "curl 'http://localhost:11434/api/chat' \\",
         "  --silent \\",
+        "  --show-error \\",
         "  --header \"Content-Type: application/json\" \\",
         "  --data '{",
         "  \"model\": \"llama2\",",
